@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import asyncio
 import time
+from streamlit_js_eval import streamlit_js_eval
 
 
 ## This blocks the timer count
@@ -45,7 +46,6 @@ st.markdown(
         margin:0;
     }
     .row-widget{
-       margin: 20px;
        display:flex;
        align-items:center;
        justify-content:center;
@@ -123,6 +123,10 @@ def add_robot_message(message):
     st.session_state["robot_messages"] = temp
 
 
+def reset_data():
+    return st.rerun()
+
+
 async def watch(test):
     while True:
         if st.session_state["selected_task"] != "":
@@ -184,6 +188,8 @@ with st.sidebar:
     break_session = st.number_input(
         "Enter Break Time(min)", step=1, value=5, format="%d"
     )
-
+    st.markdown("---")
+    if st.button("Reset", type="primary"):
+        streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
 asyncio.run(watch(test))
