@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import asyncio
+import os
 import time
 from streamlit_js_eval import streamlit_js_eval
 
@@ -24,7 +25,9 @@ if "selected_task" not in st.session_state:
 if "tasks" not in st.session_state:
     st.session_state["tasks"] = ["Break"]
 if "task_time_df" not in st.session_state:
-    st.session_state["task_time_df"] = pd.DataFrame(columns=["Task", "Time"])
+    st.session_state["task_time_df"] = pd.DataFrame(
+        columns=["Task", "Time", "Time_Stamp"]
+    )
 if "robot_messages" not in st.session_state:
     st.session_state["robot_messages"] = ["Welcome to my Application!!"]
 
@@ -73,10 +76,13 @@ st.markdown(
 	margin-left: -20px;
     }
     .stChatMessage{
-    margin-top:100px;
+    margin:50px;
     display:flex;
     gap:25px;
     align-items:center;
+    }
+    .stHeadingContainer {
+    padding-bottom:30px;
     }
     </style>
     """,
@@ -112,7 +118,10 @@ def handle_click(task):
             add_record(
                 st.session_state["selected_task"], st.session_state["total_time"]
             )
-        add_robot_message(f"Go for {task}!!")
+        if task == "Break":
+            add_robot_message(f"Enjoy your break!!")
+        else:
+            add_robot_message(f"Go for {task}!!")
         st.session_state["selected_task"] = task
         st.session_state["total_time"] = 0
 
@@ -141,15 +150,25 @@ async def watch(test):
             """,
             unsafe_allow_html=True,
         )
-        if (
-            st.session_state["total_time"] % 30 == 7
-            and st.session_state["total_time"] != 0
-        ):
-            add_robot_message(
-                f"test at {st.session_state['total_time']} Hello there I'm a robot and sending a message. This is not produced by AI so far but please come back to check it."
-            )
-            message = message_board.chat_message("assistant")
-            message.write_stream(stream_data)
+        if st.session_state["total_time"] != 0:
+            if st.session_state["selected_task"] != "Break":
+                if st.session_state["total_time"] == work_session * 60 - 60:
+                    add_robot_message(f"It's almost time to take a break!!")
+                    message = message_board.chat_message("assistant")
+                    message.write_stream(stream_data)
+                elif st.session_state["total_time"] == work_session * 60:
+                    add_robot_message(f"Take your break!!")
+                    message = message_board.chat_message("assistant")
+                    message.write_stream(stream_data)
+            else:
+                if st.session_state["total_time"] == break_session * 60 - 60:
+                    add_robot_message(f"It's almost time to go back to your task!!")
+                    message = message_board.chat_message("assistant")
+                    message.write_stream(stream_data)
+                elif st.session_state["total_time"] == break_session * 60:
+                    add_robot_message(f"It's time to go back to your task!!")
+                    message = message_board.chat_message("assistant")
+                    message.write_stream(stream_data)
         await asyncio.sleep(1)
 
 
@@ -183,11 +202,23 @@ message.write_stream(stream_data)
 with st.sidebar:
     st.header("Tracker Config")
     work_session = st.number_input(
-        "Enter Work Time(min)", step=5, value=15, format="%d"
+        "Enter Work Time(min)", step=5, value=15, min_value=3, format="%d"
     )
     break_session = st.number_input(
-        "Enter Break Time(min)", step=1, value=5, format="%d"
+        "Enter Break Time(min)", step=1, value=5, min_value=2, format="%d"
     )
+    if "REPLICATE_API_TOKEN" in st.secrets:
+        replicate_api = st.secrets["REPLICATE_API_TOKEN"]
+    else:
+        st.markdown("---")
+        st.subheader("Snowflake Arctic")
+        replicate_api = st.text_input("Enter Replicate API token:", type="password")
+        if not (replicate_api.startswith("r8_") and len(replicate_api) == 40):
+            st.warning("Please enter your Replicate API token.", icon="⚠️")
+            st.markdown(
+                "**Don't have an API token?** Head over to [Replicate](https://replicate.com) to sign up for one."
+            )
+    os.environ["REPLICATE_API_TOKEN"] = replicate_api
     st.markdown("---")
     if st.button("Reset", type="primary"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
