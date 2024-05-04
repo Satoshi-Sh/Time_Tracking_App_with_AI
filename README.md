@@ -1,5 +1,5 @@
 # Time Tracking App with AI
-This application helps users track their tasks, get AI feedback, and see their activities' visualized data.
+This application helps users track their tasks, get AI feedback, and see their activities data plots.
 
 <img src="./outlook.png" alt="main page view" width="600"/>
 
