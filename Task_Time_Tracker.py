@@ -15,9 +15,12 @@ def stream_data():
 
 
 st.set_page_config(layout="wide", page_title="Timer Tracking", page_icon="⏲️")
-background_color = "#ADD8E6"
 if "total_time" not in st.session_state:
     st.session_state["total_time"] = 0
+if "work_session" not in st.session_state:
+    st.session_state["work_session"] = 15
+if "break_session" not in st.session_state:
+    st.session_state["break_session"] = 5
 if "running" not in st.session_state:
     st.session_state["running"] = False
 if "selected_task" not in st.session_state:
@@ -152,20 +155,32 @@ async def watch(test):
         )
         if st.session_state["total_time"] != 0:
             if st.session_state["selected_task"] != "Break":
-                if st.session_state["total_time"] == work_session * 60 - 60:
+                if (
+                    st.session_state["total_time"]
+                    == st.session_state["work_session"] * 60 - 60
+                ):
                     add_robot_message(f"It's almost time to take a break!!")
                     message = message_board.chat_message("assistant")
                     message.write_stream(stream_data)
-                elif st.session_state["total_time"] == work_session * 60:
+                elif (
+                    st.session_state["total_time"]
+                    == st.session_state["work_session"] * 60
+                ):
                     add_robot_message(f"Take your break!!")
                     message = message_board.chat_message("assistant")
                     message.write_stream(stream_data)
             else:
-                if st.session_state["total_time"] == break_session * 60 - 60:
+                if (
+                    st.session_state["total_time"]
+                    == st.session_state["break_session"] * 60 - 60
+                ):
                     add_robot_message(f"It's almost time to go back to your task!!")
                     message = message_board.chat_message("assistant")
                     message.write_stream(stream_data)
-                elif st.session_state["total_time"] == break_session * 60:
+                elif (
+                    st.session_state["total_time"]
+                    == st.session_state["break_session"] * 60
+                ):
                     add_robot_message(f"It's time to go back to your task!!")
                     message = message_board.chat_message("assistant")
                     message.write_stream(stream_data)
@@ -201,11 +216,19 @@ message.write_stream(stream_data)
 # sidebar
 with st.sidebar:
     st.header("Tracker Config")
-    work_session = st.number_input(
-        "Enter Work Time(min)", step=5, value=15, min_value=3, format="%d"
+    st.session_state["work_session"] = st.number_input(
+        "Enter Work Time(min)",
+        step=5,
+        value=st.session_state["work_session"],
+        min_value=3,
+        format="%d",
     )
-    break_session = st.number_input(
-        "Enter Break Time(min)", step=1, value=5, min_value=2, format="%d"
+    st.session_state["break_session"] = st.number_input(
+        "Enter Break Time(min)",
+        step=1,
+        value=st.session_state["break_session"],
+        min_value=2,
+        format="%d",
     )
     if "REPLICATE_API_TOKEN" in st.secrets:
         replicate_api = st.secrets["REPLICATE_API_TOKEN"]
