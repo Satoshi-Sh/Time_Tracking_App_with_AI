@@ -11,8 +11,8 @@ def generate_arctic_response():
     for event in replicate.stream(
         "snowflake/snowflake-arctic-instruct",
         input={
-            "prompt": f"I'll give you my activity data. Can you give a encouraging feedback on my activity? Time is in second by the way. No need to mention about the time stamp. {task_times}",
-            "prompt_template": r"{prompt}",
+            "prompt": f"{task_times}",
+            "prompt_template": r"<|im_start|>system\nYou're a helpful assistant to give encouraging feedback on user's activity data. Time is second by the way <|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n\n<|im_start|>assistant\n",
             "temperature": 0.3,
             "top_p": 0.9,
         },
